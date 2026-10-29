@@ -12,7 +12,7 @@ contract IndustrialSecurityToken is IERC3643 {
     string public name;
     string public symbol;
     uint8 public constant decimals = 0; // Fractional unit tokens (Class A Units)
-    uint256 public override balanceOfTotal;
+    uint256 public balanceOfTotal;
 
     address public owner;
     address public escrowAgent;
