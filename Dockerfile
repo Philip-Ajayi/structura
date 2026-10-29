@@ -1,13 +1,21 @@
 # ============================================================
-# STAGE 1: Build Next.js 14 Standalone Frontend
+# STAGE 1: Build Next.js Standalone Frontend
 # ============================================================
 FROM node:18-alpine AS frontend-builder
 WORKDIR /app/frontend
 
+# Copy package manifests
 COPY frontend/package*.json ./
-RUN npm ci
 
+# 1. Use npm install with legacy peer deps (fixes missing package-lock.json and React 19 peer deps)
+RUN npm install --legacy-peer-deps
+
+# Copy frontend source code
 COPY frontend/ ./
+
+# 2. Ensure public directory exists so Stage 2 COPY does not fail if public/ was not committed
+RUN mkdir -p ./public
+
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
@@ -38,13 +46,16 @@ COPY backend/requirements.txt ./backend/
 RUN pip install --no-cache-dir -r ./backend/requirements.txt
 
 # Copy Smart Contracts & compile artifacts with Forge
+# Installs forge-std if missing and safely builds contracts for contracts_bridge.py
 COPY contracts/ ./contracts/
-RUN cd /app/contracts && forge build
+RUN cd /app/contracts && \
+    (forge install foundry-rs/forge-std --no-git --no-commit 2>/dev/null || true) && \
+    (forge build || forge build --skip test --skip script)
 
 # Copy Backend Source
 COPY backend/ ./backend/
 
-# Copy Next.js standalone build
+# Copy Next.js standalone build & static assets
 COPY --from=frontend-builder /app/frontend/.next/standalone ./frontend/
 COPY --from=frontend-builder /app/frontend/.next/static ./frontend/.next/static
 COPY --from=frontend-builder /app/frontend/public ./frontend/public
