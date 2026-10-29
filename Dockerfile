@@ -1,7 +1,7 @@
 # ============================================================
 # STAGE 1: Build Next.js Standalone Frontend
 # ============================================================
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 # Copy package manifests
@@ -26,13 +26,13 @@ FROM python:3.11-slim AS runner
 
 WORKDIR /app
 
-# Install system dependencies, Node.js, and build tools
+# Install system dependencies, Node.js 20, and build tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     bash \
     build-essential \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
